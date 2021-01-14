@@ -5,65 +5,61 @@
 #include <arpa/inet.h> // htnol, htons, INADDR_ANV, sockaddr_in
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <errno.h>
 
-#define BUFSIZE 20
+#define BUFSIZE 100
 
 int error_handling(char *message);
 
-int main(int argc, char* arvg[])
+int main(int argc, char* argv[])
 {
     char buf[BUFSIZE+1];
-    int len;
-    char msg[] = "Hello Server\n";
-    int msg_len;
+    char msg[] = "Hello Server";
 
-    int server_socket;
     int client_socket;
     int retval;
+    int recv_len;
 
     struct sockaddr_in server_addr;
-    struct sockaddr_in client_addr;
-    socklen_t serv_addr_size;
 
     //socekt()
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    client_socket = socket(PF_INET, SOCK_STREAM, 0);
     if(-1 == client_socket){
         error_handling("socket error");
     }
 
     //connect()
-    memset(&client_addr, 0, sizeof(client_addr));
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_addr.s_addr = inet_addr(arvg[1]); // 입력값의 첫번째 인자를 클라이언트 IP 주소로 설정
-    client_addr.sin_port = htons(atoi(arvg[2])); // 입력값의 두번째 인자를 클라이언트 포트로 설정
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(argv[1]); // 서버 IP주소 인자로 받은거 저장해주기
+    server_addr.sin_port = htons(atoi(argv[2])); // 서버 포트번호 인자로 받은거 저장해주기
     retval = connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if(retval == -1)
         error_handling("connect error");
 
     //서버와 데이터 교환
-    while(1){
+    //while(1){
         //send()
-        retval = send(server_socket, msg, retval, 0);
-        if(retval == SO_ERROR){
+        strcpy(buf, "Hello Server");
+        retval = send(client_socket, buf, strlen(buf), 0);
+        if(retval == -1){
             error_handling("send error");
-            break;
+    //        break;
         }
+    //    printf("send: %s, %d\n", buf, retval);
 
         //recv()
-        retval = recv(server_socket, buf, BUFSIZE, 0);
-        if(retval == SO_ERROR){
+        recv_len = recv(client_socket, &buf, BUFSIZE, 0);
+        if(recv_len == -1){
+            printf("%d", errno);
             error_handling("recv error");
+    //        break;
         }
-        else if(retval == 0)
-            break;
-
-        buf[retval] = '\0';
-        printf("%s\n", buf);
+    //    else if(recv_len == 0) break;
+        printf("From server: %s\n", buf);
             
-    }
+//    }
 
-    //closesocket()
-    close(server_socket);
     close(client_socket);
 }
 
