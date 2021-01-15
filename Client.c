@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
             error_handling("send error");
     //        break;
         }
-    //    printf("send: %s, %d\n", buf, retval);
+        //printf("send: %s, %d\n", buf, retval);
 
         //recv()
         recv_len = recv(client_socket, &buf, BUFSIZE, 0);
